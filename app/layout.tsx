@@ -1,6 +1,13 @@
+import { Notification } from "@/components/layout/Notification";
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import Navbar from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
+import AuthProvider from "@/components/providers/AuthProvider";
+import QueryProvider from "@/components/providers/QueryProvider";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -24,11 +31,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <AuthProvider>
+          <QueryProvider>
+            <Notification />
+            <Navbar />
+            {children}
+            <Footer />
+            <ToastContainer
+              position="bottom-right"
+              theme="dark"
+              autoClose={3000}
+            />
+          </QueryProvider>
+        </AuthProvider>
       </body>
     </html>
   );

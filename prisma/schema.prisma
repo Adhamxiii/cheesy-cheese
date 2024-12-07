@@ -1,0 +1,133 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  createdAt DateTime  @default(now())
+  title     String
+  products  Product[]
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  title       String
+  description String
+  price       Decimal
+  image       String?
+  isFeatured  Boolean  @default(false)
+  options     Json[]
+  ratings     Float
+  category    Category @relation(fields: [categoryId], references: [id])
+  categoryId  String
+  order       Order?   @relation(fields: [orderId], references: [id])
+  orderId     String?
+}
+
+model Order {
+  id                String           @id @default(cuid())
+  createdAt         DateTime         @default(now())
+  status            OrderStatus
+  products          Product[]
+  total             Float
+  paymentMethod     PaymentMethod
+  shippingAddress   ShippingAddress?
+  shippingAddressId String?          @unique
+  trackingNumber    String?
+  intent_id         String?          @unique
+  user              User             @relation(fields: [userEmail], references: [email])
+  userEmail         String
+}
+
+model ShippingAddress {
+  id      String  @id @default(cuid())
+  name    String
+  street  String
+  city    String
+  state   String
+  zipCode String
+  country String
+  order   Order?  @relation(fields: [orderId], references: [id])
+  orderId String? @unique
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CREDIT_CARD
+  PAYPAL
+  BANK_TRANSFER
+  CASH_ON_DELIVERY
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  isAdmin       Boolean   @default(false)
+  Order         Order[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+}
